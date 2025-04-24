@@ -15,7 +15,6 @@ error() {
 ########## 1. Kiểm tra root ##########
 if [[ $(id -u) -ne 0 ]]; then
   error "Please run as root or via sudo"
-  exit 1
 fi
 
 ########## 2. Biến môi trường ##########
@@ -96,8 +95,7 @@ CREDS_HOST_PATH="$CFG_DIR/$CRED_BASENAME"
 
 # 5. Kiểm tra sự tồn tại của file
 if [[ ! -f "$CREDS_HOST_PATH" ]]; then
-  echo "[ERROR] Credentials file not found: $CREDS_HOST_PATH"
-  exit 1
+  error "Credentials file not found: $CREDS_HOST_PATH"
 fi
 
 # 6. Phân quyền và chủ sở hữu cho file credentials
@@ -197,7 +195,7 @@ docker run -d \
   "$DOCKER_IMAGE" tunnel --no-autoupdate --config /home/nonroot/.cloudflared/config.yml run 
 
 echo "[INFO] Waiting for tunnel to initialize..."
-sleep 5
+sleep 3
 
 if docker ps -f name="$CONTAINER_NAME" --format '{{.Names}}' | grep -q "$CONTAINER_NAME"; then
   echo "[SUCCESS] Tunnel container is up and running."
