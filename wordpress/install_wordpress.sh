@@ -27,7 +27,8 @@ cat > docker-compose.yml <<EOF
 version: '3.7'
 
 services:
-  aki_wp_db:
+  db:
+    container_name: wp_db
     image: mariadb:10.6
     restart: unless-stopped
     volumes:
@@ -39,14 +40,15 @@ services:
       MYSQL_PASSWORD: \${MYSQL_PASSWORD}
 
   wordpress:
+    container_name: wp_app
     image: wordpress:6.4-php8.1-apache
     depends_on:
-      - aki_wp_db
+      - db
     ports:
       - "${PORT}:80"
     restart: unless-stopped
     environment:
-      WORDPRESS_DB_HOST: aki_wp_db:3306
+      WORDPRESS_DB_HOST: db:3306
       WORDPRESS_DB_NAME: \${MYSQL_DATABASE}
       WORDPRESS_DB_USER: \${MYSQL_USER}
       WORDPRESS_DB_PASSWORD: \${MYSQL_PASSWORD}
