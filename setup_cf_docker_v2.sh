@@ -15,6 +15,7 @@ error() {
 ########## 1. Kiểm tra root ##########
 if [[ $(id -u) -ne 0 ]]; then
   error "Please run as root or via sudo"
+  exit 1
 fi
 
 ########## 2. Biến môi trường ##########
@@ -68,16 +69,16 @@ rm -rf "$CFG_DIR/*"
 sleep 1
 
 ########## 4. Đăng nhập Cloudflare (sinh cert.pem) ##########
-echo "[INFO] Running tunnel login..."
+log "Running tunnel login..."
 docker run --rm \
   -v "$CFG_DIR:/home/nonroot/.cloudflared" \
   --user 65532:65532 \
   "$DOCKER_IMAGE" tunnel login
 
-echo "[INFO] cert.pem should now be in $CFG_DIR"
+log "cert.pem should now be in $CFG_DIR"
 
 ########## 5. Tạo tunnel (sinh credentials JSON) ##########
-echo "[INFO] Creating tunnel '$TUNNEL_NAME'..."
+log "Creating tunnel '$TUNNEL_NAME'..."
 # 1. Tạo tunnel và lấy output JSON
 json_output=$(docker run --rm \
   -v "$CFG_DIR:/home/nonroot/.cloudflared" \
@@ -102,8 +103,8 @@ fi
 chown 65532:65532 "$CREDS_HOST_PATH"
 chmod 600    "$CREDS_HOST_PATH"
 
-echo "[INFO] Tunnel ID: $TUNNEL_ID"
-echo "[INFO] Credentials file: $CREDS_HOST_PATH"
+log "Tunnel ID: $TUNNEL_ID"
+log "Credentials file: $CREDS_HOST_PATH"
 
 ### APPP
 
@@ -182,10 +183,9 @@ log "------------------------"
 
 
 ########## 7. Chạy container tunnel ##########
-echo "[INFO] Starting Docker container '$CONTAINER_NAME'..."
+log "Starting Docker container '$CONTAINER_NAME'..."
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
-#-v "$CFG_DIR/config.yml:/etc/cloudflared/config.yml" \
 docker run -d \
   --name "$CONTAINER_NAME" \
   --restart unless-stopped \
@@ -194,14 +194,13 @@ docker run -d \
   --network host \
   "$DOCKER_IMAGE" tunnel --no-autoupdate --config /home/nonroot/.cloudflared/config.yml run 
 
-echo "[INFO] Waiting for tunnel to initialize..."
+log "Waiting for tunnel to initialize..."
 sleep 3
 
 if docker ps -f name="$CONTAINER_NAME" --format '{{.Names}}' | grep -q "$CONTAINER_NAME"; then
   echo "[SUCCESS] Tunnel container is up and running."
 else
-  echo "[ERROR] Container failed to start. Check logs with:"
   echo "  docker logs -f $CONTAINER_NAME"
-  exit 1
+  error "[ERROR] Container failed to start. Check logs with:"
 fi
 
