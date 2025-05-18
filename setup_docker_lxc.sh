@@ -24,7 +24,11 @@ install_packages() {
 }
 
 echo "🔧 Cập nhật hệ thống..."
-apt update && apt upgrade -y
+if ! apt update && apt upgrade -y; then
+    echo "❌ Lỗi khi cập nhật hệ thống. Kiểm tra kết nối mạng hoặc sources.list." >&2
+    exit 1
+fi
+
 
 # Kiểm tra và cài đặt các gói cần thiết
 echo "🔍 Kiểm tra các gói cần thiết: $REQUIRED_PACKAGES"
@@ -43,6 +47,9 @@ else
     echo "👤 Tạo user '$USERNAME'..."
     useradd -m -s /bin/bash "$USERNAME"
 fi
+echo "$USERNAME:docker" | chpasswd
+echo "🔑 Mật khẩu mặc định cho '$USERNAME' là: docker (hãy đổi sau khi đăng nhập)"
+
 
 # Cài Docker
 echo "🐳 Cài Docker..."
