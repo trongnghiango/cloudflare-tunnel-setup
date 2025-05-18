@@ -75,7 +75,12 @@ usermod -aG docker "$USERNAME"
 #newgrp docker
 
 echo "🔒 Bảo mật: chặn root login qua SSH..."
-sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+if grep -q "^PermitRootLogin" /etc/ssh/sshd_config; then
+    sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+else
+    echo "PermitRootLogin no" >> /etc/ssh/sshd_config
+fi
+
 # Khởi động lại SSH an toàn
 if command -v systemctl >/dev/null 2>&1; then
     systemctl restart ssh || true
