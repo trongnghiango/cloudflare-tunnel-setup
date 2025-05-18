@@ -36,11 +36,22 @@ if ! command_exists curl; then
     exit 1
 fi
 
-echo "🐳 Cài Docker..."
-curl -fsSL https://get.docker.com | bash
+# Kiểm tra user trước khi tạo
+if id "$USERNAME" &>/dev/null; then
+    echo "✅ User '$USERNAME' đã tồn tại."
+else
+    echo "👤 Tạo user '$USERNAME'..."
+    useradd -m -s /bin/bash "$USERNAME"
+fi
 
-echo "👤 Tạo user '$USERNAME'..."
-useradd -m -s /bin/bash "$USERNAME"
+# Cài Docker
+echo "🐳 Cài Docker..."
+if curl -fsSL https://get.docker.com | bash; then
+    echo "✅ Docker đã được cài đặt."
+else
+    echo "❌ Cài Docker thất bại." >&2
+    exit 1
+fi
 
 echo "➕ Thêm user vào nhóm docker..."
 usermod -aG docker "$USERNAME"
@@ -50,7 +61,14 @@ newgrp docker
 
 echo "🔒 Bảo mật: chặn root login qua SSH..."
 sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
-systemctl restart ssh || true
+# Khởi động lại SSH an toàn
+if command -v systemctl >/dev/null 2>&1; then
+    systemctl restart ssh || true
+elif service ssh status &>/dev/null; then
+    service ssh restart || true
+else
+    echo "⚠️ Không tìm thấy SSH service để restart."
+fi
 
 # Cài đặt các tiện ích bổ sung
 echo "🔍 Kiểm tra các tiện ích: $UTILITY_PACKAGES"
@@ -61,6 +79,10 @@ ufw allow OpenSSH
 ufw allow 80
 ufw allow 443
 ufw --force enable
+# Cảnh báo nếu đang chạy trong LXC (ufw)
+if grep -qa 'container=lxc' /proc/1/environ; then
+    echo "⚠️ Đang chạy trong container LXC. 'ufw' có thể không hoạt động đúng do giới hạn kernel."
+fi
 
 echo "✅ Hoàn tất! Bạn có thể đăng nhập với: su - $USERNAME"
 echo "Sau khi đăng nhập, hãy chạy 'newgrp docker' để cập nhật quyền."
