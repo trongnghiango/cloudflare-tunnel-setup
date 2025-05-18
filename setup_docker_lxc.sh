@@ -5,6 +5,12 @@ USERNAME="dockeruser"
 REQUIRED_PACKAGES="curl ca-certificates apt-transport-https" # Thêm apt-transport-https
 UTILITY_PACKAGES="htop git ufw bash-completion"
 
+if [ "$(id -u)" -ne 0 ]; then
+    echo "❌ Script này cần quyền root. Vui lòng chạy bằng sudo hoặc với user root."
+    exit 1
+fi
+
+
 # Hàm kiểm tra xem một lệnh có tồn tại hay không
 command_exists() {
     command -v "$1" >/dev/null 2>&1
@@ -83,9 +89,13 @@ fi
 echo "🔍 Kiểm tra các tiện ích: $UTILITY_PACKAGES"
 install_packages "$UTILITY_PACKAGES"
 
-
+echo "💡 Gợi ý: Nếu đang dùng Proxmox LXC, hãy đảm bảo container có cấu hình:"
+echo "    lxc.apparmor.profile: unconfined"
+echo "    lxc.cgroup2.devices.allow: a"
+echo "    lxc.cap.drop: "
 if grep -qa 'container=lxc' /proc/1/environ; then
     echo "⚠️ Đang chạy trong container LXC. 'ufw' có thể không hoạt động đúng do giới hạn kernel."
+    
     if ! lsmod | grep -qE 'nft|xt'; then
         echo "❌ Thiếu module firewall (nftables/xtables). Bỏ qua bật 'ufw'."
     else
