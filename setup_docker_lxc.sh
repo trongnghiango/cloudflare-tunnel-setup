@@ -57,7 +57,7 @@ echo "➕ Thêm user vào nhóm docker..."
 usermod -aG docker "$USERNAME"
 
 # Đảm bảo cập nhật thông tin nhóm người dùng
-newgrp docker
+#newgrp docker
 
 echo "🔒 Bảo mật: chặn root login qua SSH..."
 sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
@@ -82,7 +82,11 @@ ufw --force enable
 # Cảnh báo nếu đang chạy trong LXC (ufw)
 if grep -qa 'container=lxc' /proc/1/environ; then
     echo "⚠️ Đang chạy trong container LXC. 'ufw' có thể không hoạt động đúng do giới hạn kernel."
+    if ! lsmod | grep -qE 'nft|xt'; then
+        echo "❌ Thiếu module firewall (nftables/xtables). 'ufw' có thể không hoạt động."
+    fi
 fi
+
 
 echo "✅ Hoàn tất! Bạn có thể đăng nhập với: su - $USERNAME"
 echo "Sau khi đăng nhập, hãy chạy 'newgrp docker' để cập nhật quyền."
