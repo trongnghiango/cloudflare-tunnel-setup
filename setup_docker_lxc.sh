@@ -119,6 +119,7 @@ else
 fi
 
 echo "🧹 Dọn dẹp..."
+apt-get autoremove -y
 apt-get clean
 
 echo "✅ Hoàn tất! Bạn có thể đăng nhập với: su - $USERNAME"
