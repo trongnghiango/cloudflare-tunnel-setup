@@ -74,18 +74,26 @@ fi
 echo "🔍 Kiểm tra các tiện ích: $UTILITY_PACKAGES"
 install_packages "$UTILITY_PACKAGES"
 
-echo "🛡️ Kích hoạt firewall cơ bản..."
-ufw allow OpenSSH
-ufw allow 80
-ufw allow 443
-ufw --force enable
-# Cảnh báo nếu đang chạy trong LXC (ufw)
+
 if grep -qa 'container=lxc' /proc/1/environ; then
     echo "⚠️ Đang chạy trong container LXC. 'ufw' có thể không hoạt động đúng do giới hạn kernel."
     if ! lsmod | grep -qE 'nft|xt'; then
-        echo "❌ Thiếu module firewall (nftables/xtables). 'ufw' có thể không hoạt động."
+        echo "❌ Thiếu module firewall (nftables/xtables). Bỏ qua bật 'ufw'."
+    else
+        echo "🛡️ Kích hoạt firewall cơ bản..."
+        ufw allow OpenSSH
+        ufw allow 80
+        ufw allow 443
+        ufw --force enable
     fi
+else
+    echo "🛡️ Kích hoạt firewall cơ bản..."
+    ufw allow OpenSSH
+    ufw allow 80
+    ufw allow 443
+    ufw --force enable
 fi
+
 
 
 echo "✅ Hoàn tất! Bạn có thể đăng nhập với: su - $USERNAME"
