@@ -3,7 +3,7 @@ set -e
 
 USERNAME="dockeruser"
 REQUIRED_PACKAGES="curl ca-certificates apt-transport-https" # Thêm apt-transport-https
-UTILITY_PACKAGES="htop git ufw bash-completion"
+UTILITY_PACKAGES="htop git ufw bash-completion sudo"
 
 if [ "$(id -u)" -ne 0 ]; then
     echo "❌ Script này cần quyền root. Vui lòng chạy bằng sudo hoặc với user root."
@@ -69,7 +69,7 @@ else
 fi
 
 echo "➕ Thêm user vào nhóm docker..."
-usermod -aG docker "$USERNAME"
+usermod -aG docker,sudo "$USERNAME"
 
 # Đảm bảo cập nhật thông tin nhóm người dùng
 #newgrp docker
