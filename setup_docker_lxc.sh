@@ -48,7 +48,9 @@ else
     useradd -m -s /bin/bash "$USERNAME"
 fi
 echo "$USERNAME:docker" | chpasswd
-echo "🔑 Mật khẩu mặc định cho '$USERNAME' là: docker (hãy đổi sau khi đăng nhập)"
+passwd -e "$USERNAME"
+echo "🔑 Mật khẩu mặc định cho '$USERNAME' là: docker (bắt buộc đổi khi đăng nhập)"
+
 
 
 # Cài Docker
@@ -101,7 +103,8 @@ else
     ufw --force enable
 fi
 
-
+echo "🧹 Dọn dẹp..."
+apt-get clean
 
 echo "✅ Hoàn tất! Bạn có thể đăng nhập với: su - $USERNAME"
 echo "Sau khi đăng nhập, hãy chạy 'newgrp docker' để cập nhật quyền."
